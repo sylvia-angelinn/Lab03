@@ -1,0 +1,43 @@
+
+---
+title: "Spark SQL Job Data Analysis"
+author: "Sylvia"
+format: html
+embed-resources: true
+date: "2026-6-2"
+date-format: long
+execute:
+  echo: true
+---
+
+```{python}
+from pyspark.sql import SparkSession
+
+# Start a Spark session
+spark = SparkSession.builder.appName("JobPostingsAnalysis").getOrCreate()
+
+# Load the CSV file into a Spark DataFrame
+df = spark.read.option("header", "true").option("inferSchema", "true").option("multiLine", "true").option("escape", "\"").csv("data/lightcast_job_postings.csv")
+
+# 3. Register the DataFrame as a temporary SQL table
+df.createOrReplaceTempView("jobs")
+
+# Verify the Data
+
+# Display the first five rows
+df.show(5)
+
+# Show the schema (column names & data types)
+df.printSchema()
+
+# Run a Spark SQL query to count job postings per employment type
+job_counts_by_type = spark.sql("""
+    SELECT EMPLOYMENT_TYPE_NAME, COUNT(*) AS job_count
+    FROM jobs
+    GROUP BY EMPLOYMENT_TYPE_NAME
+    ORDER BY job_count DESC
+""")
+
+# Show the result
+job_counts_by_type.show()
+```
